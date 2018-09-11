@@ -1,45 +1,213 @@
 {
-  "name": "${environmentName}",
-  "description": "Blockchain II",
-  "version": "0.0.1",
-  "author": "https://github.com/lbthomsen",
-  "containers": [
-    {
-      "hostname": "bs0",
-      "template": "debian-stretch",
-      "peer-criteria": "peers",
-      "size": "TINY"
-    }
-  ],
-  "peer-criteria": [
-    {
-      "name": "peers"
-    }
-  ],
-  "ansible-configuration": {
-    "source-url": "https://github.com/absidish/app1-1/archive/master.zip",
-    "ansible-playbook": "site.yml",
-    "extra-vars": [
-      {
-        "key": "text",
-        "value": "${userName}"
-      }
+    "name": "${environmentName}",
+    "description": "Blockchain in a Box mk. II (aka. Blockchain in Many Boxes)",
+    "version": "0.0.3",
+    "author": "https://github.com/lbthomsen",
+    "ssh-key": "lth",
+    "containers": [
+        {
+            "hostname": "bn",
+            "template": "debian-stretch",
+            "peer-criteria": "peers",
+            "peer-layout": "bn",
+            "size": "${containerSize}",
+            "port-mapping": [
+                {
+                    "protocol": "http",
+                    "domain": "${domain}",
+                    "internal-port": "80",
+                    "external-port": "80"
+                },
+                {
+                    "protocol": "udp",
+                    "domain": "${discDomain}",
+                    "internal-port": "30303",
+                    "external-port": "${discPort}"
+                }, 
+                {
+                    "protocol": "tcp",
+                    "domain": "${rpcDomain}",
+                    "internal-port": "30303",
+                    "external-port": "${rpcPort}"
+                }
+            ]
+        },
+        {
+            "hostname": "bc",
+            "template": "debian-stretch",
+            "peer-criteria": "peers",
+            "peer-layout": "bc",
+            "size": "${containerSize}", 
+            "port-mapping": [
+                {
+                    "protocol": "http",
+                    "domain": "${jsonDomain}",
+                    "internal-port": "8545",
+                    "external-port": "${jsonPort}"
+                }
+            ]
+        },
+        {
+            "hostname": "m",
+            "template": "debian-stretch",
+            "peer-criteria": "peers",
+            "peer-layout": "m",
+            "size": "${containerSize}"
+        }
     ],
-    "groups": [
-      {
-        "name": "bs",
-        "hostnames": [
-          "bs0"
+    "peer-criteria": [
+        {
+            "name": "peers"
+        }
+    ],
+    "peer-layouts": [
+        {
+            "name": "bn",
+            "peer-count": "1",
+            "container-per-peer": "1"
+        },
+        {
+            "name": "bc",
+            "peer-count": "${numberOfNodes}",
+            "container-per-peer": "1"
+        },
+        {
+            "name": "m",
+            "peer-count": "${numberOfMiners}",
+            "container-per-peer": "1"
+        }
+    ],
+    "ansible-configuration": {
+        "source-url": "https://github.com/absidish/subutai-bp-blockchain2/archive/master.zip",
+        "ansible-playbook": "site.yml",
+        "extra-vars": [
+            {
+                "key": "domain",
+                "value": "${domain}"
+            },
+            {
+                "key": "json_domain",
+                "value": "${jsonDomain}"
+            },
+            {
+                "key": "rpc_domain",
+                "value": "${rpcDomain}"
+            },
+            {
+                "key": "disc_domain",
+                "value": "${discDomain}"
+            },
+            {
+                "key": "ethereum_network",
+                "value": "${ethereumNetwork}"
+            }, 
+            {
+                "key": "ethereum_difficulty", 
+                "value": "${ethereumDifficulty}"
+            },
+            {
+                "key": "coinbase", 
+                "value": "${coinbase}"
+            }
+        ],
+        "groups": [
+            {
+                "name": "bn",
+                "hostnames": [
+                    "bn"
+                ]
+            },
+            {
+                "name": "bc",
+                "hostnames": [
+                    "bc"
+                ]
+            },
+            {
+                "name": "m",
+                "hostnames": [
+                    "m"
+                ]
+            }
         ]
-      }
-    ]
-  },
-  "user-variables": {
-    "userName": {
-      "description": "variable name",
-      "type": "string",
-      "default": "biab2",
-      "validation": ".*"
+    },
+    "user-variables": {
+        "environmentName": {
+            "description": "Enter the environment name",
+            "type": "string",
+            "default": "biab2",
+            "validation": "[a-zA-Z0-9]+"
+        },
+        "domain": {
+            "description": "Enter the primary domain name",
+            "type": "domain",
+            "default": "change.the.domain",
+            "validation": "[a-zA-Z0-9]+"
+        },
+        "discDomain": {
+            "description": "Enter the discovery domain name",
+            "type": "domain",
+            "default": "change.the.domain",
+            "validation": "[a-zA-Z0-9]+"
+        },
+        "discPort": {
+            "description": "Enter the discovery port number",
+            "type": "int",
+            "default": "30303"
+        },
+        "rpcDomain": {
+            "description": "Enter the discovery domain name",
+            "type": "domain",
+            "default": "change.the.domain",
+            "validation": "[a-zA-Z0-9]+"
+        },
+        "rpcPort": {
+            "description": "Enter the discovery port number",
+            "type": "int",
+            "default": "30303"
+        },
+        "jsonDomain": {
+            "description": "Enter the json domain name",
+            "type": "domain",
+            "default": "change.the.domain",
+            "validation": "[a-zA-Z0-9]+"
+        },
+        "jsonPort": {
+            "description": "Enter the json port number",
+            "type": "int",
+            "default": "8546"
+        },
+        "numberOfNodes": {
+            "description": "Enter the number of nodes",
+            "type": "int",
+            "default": "2"
+        },
+        "numberOfMiners": {
+            "description": "Enter the number of miners",
+            "type": "int",
+            "default": "2"
+        },
+        "ethereumNetwork": {
+            "description": "Enter the ethereum network id",
+            "type": "int",
+            "default": "2020"
+        }, 
+        "ethereumDifficulty": {
+            "description": "Enter the mining difficulty",
+            "type": "string",
+            "default": "0x400", 
+            "validation": "^0x[a-zA-Z0-9]+"
+        },
+        "coinbase": {
+            "description": "Enter the coinbase (recipient of mined coins)",
+            "type": "string",
+            "default": "0x0CB71B91C8e56de5f93eC953fC3A6DB10045E948"
+        }, 
+        "containerSize": {
+            "description": "Container Size",
+            "type": "enum",
+            "default": "LARGE",
+            "validation": "LARGE,HUGE"
+        }
     }
-  }
 }
